@@ -898,7 +898,7 @@ function updateSidebarProfile() {
 function updateDashboard() {
   const p = state.profile;
   const name = p.name ? p.name.split(' ')[0] : 'there';
-  document.getElementById('dash-greeting').textContent = 'Good morning, ' + name + ' 👋';
+  document.getElementById('dash-greeting').textContent = 'Hey there, ' + name + ' 👋';
   if (p.examDate) {
     const d = new Date(p.examDate);
     document.getElementById('dash-sub').innerHTML = 'Exam on <strong>' + d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + '</strong> — stay consistent.';
