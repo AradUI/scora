@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Scora — AI Study Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ── Reset & Base ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f8f9;
+  --surface:#ffffff;
+  --surface-alt:#f3f3f5;
+  --border:#e8e8ea;
+  --border-dark:#d0d0d4;
+  --accent:#111111;
+  --accent-mid:#555555;
+  --accent-soft:#ececee;
+  --text:#111111;
+  --text-muted:#999999;
+  --text-dim:#666666;
+  --shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.05);
+  --shadow-md:0 2px 8px rgba(0,0,0,0.08),0 8px 28px rgba(0,0,0,0.07);
+  --shadow-lg:0 4px 16px rgba(0,0,0,0.10),0 16px 48px rgba(0,0,0,0.08);
+}
+html,body{height:100%;overflow-x:hidden}
+body{
+  background:linear-gradient(160deg,#f8f8f9 0%,#efefef 100%);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-dark);border-radius:4px}
+select option{background:#fff;color:#111}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.animate-up{animation:fadeUp 0.4s ease forwards}
+
+/* ── Layout ── */
+#app{display:flex;min-height:100vh}
+#sidebar{
+  width:218px;flex-shrink:0;height:100vh;position:sticky;top:0;
+  background:linear-gradient(180deg,#fff 0%,#f9f9fa 100%);
+  border-right:1px solid var(--border);
+  box-shadow:2px 0 12px rgba(0,0,0,0.04);
+  display:flex;flex-direction:column;
+  transition:width 0.22s ease;overflow:hidden;z-index:10
+}
+#sidebar.collapsed{width:58px}
+#main{flex:1;overflow-y:auto;overflow-x:hidden}
+
+/* ── Sidebar Logo ── */
+.sb-logo{
+  padding:18px 14px;display:flex;align-items:center;gap:9px;
+  border-bottom:1px solid var(--border);flex-shrink:0
+}
+.sb-logo-icon{
+  width:30px;height:30px;
+  background:linear-gradient(135deg,#222 0%,#000 100%);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.2);
+  font-size:13px;font-weight:800;color:#fff;letter-spacing:-0.03em
+}
+.sb-logo-text{font-weight:800;font-size:15.5px;letter-spacing:-0.04em;white-space:nowrap}
+#sidebar.collapsed .sb-logo-text,
+#sidebar.collapsed .sb-nav-label,
+#sidebar.collapsed .sb-user-info{display:none}
+
+/* ── Sidebar Nav ── */
+.sb-nav{flex:1;padding:10px 7px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.sb-nav-btn{
+  display:flex;align-items:center;gap:9px;padding:9px 10px;
+  border-radius:8px;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;
+  text-align:left;white-space:nowrap;
+  background:transparent;color:var(--text-muted);
+  transition:all 0.13s;width:100%
+}
+.sb-nav-btn:hover{background:var(--accent-soft)!important;color:var(--accent)!important}
+.sb-nav-btn.active{
+  background:linear-gradient(135deg,#f0f0f0 0%,#e8e8ea 100%);
+  color:var(--accent);font-weight:600;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.04)
+}
+.sb-nav-icon{font-size:14px;flex-shrink:0}
+.sb-divider{height:1px;background:linear-gradient(to right,transparent,var(--border),transparent)}
+.sb-collapse-btn{
+  margin:6px 7px;padding:7px;border-radius:7px;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);cursor:pointer;font-size:11px;
+  display:flex;align-items:center;justify-content:center;transition:all 0.13s
+}
+.sb-collapse-btn:hover{background:var(--accent-soft)}
+.sb-user{
+  padding:12px 14px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:9px;cursor:pointer;
+  transition:background 0.13s
+}
+.sb-user:hover{background:var(--accent-soft)}
+.sb-avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:linear-gradient(135deg,#444 0%,#111 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#fff;flex-shrink:0;
+  box-shadow:0 1px 4px rgba(0,0,0,0.2)
+}
+.sb-user-info{}
+.sb-user-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-user-sub{font-size:11px;color:var(--text-muted)}
+
+/* ── Page sections ── */
+.page{display:none;padding:30px 32px;max-width:1080px}
+.page.active{display:block}
+.page-title{font-size:21px;font-weight:700;letter-spacing:-0.03em;margin-bottom:3px}
+.page-sub{color:var(--text-muted);font-size:13px;margin-bottom:22px}
+
+/* ── Cards ── */
+.card{
+  background:#fff;border:1px solid var(--border);
+  border-radius:12px;padding:20px;
+  box-shadow:var(--shadow);transition:all 0.18s ease
+}
+.card-gradient{background:linear-gradient(145deg,#fff 0%,#f7f7f8 100%)}
+.card-lift:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--border-dark)}
+.card-highlight{box-shadow:var(--shadow-md)}
+
+/* ── Tags ── */
+.tag{
+  display:inline-flex;align-items:center;padding:2px 9px;
+  border-radius:4px;font-size:10.5px;font-weight:600;
+  letter-spacing:0.05em;text-transform:uppercase
+}
+.tag-default{background:#ececee;color:#555;border:1px solid #e0e0e2}
+.tag-strong{background:#111;color:#fff;border:1px solid #111}
+.tag-pos{background:#f0f0f0;color:#222;border:1px solid #d8d8d8}
+.tag-neg{background:#f5f5f5;color:#888;border:1px solid #e0e0e0}
+.tag-warn{background:#f2f2f2;color:#666;border:1px solid #dedede}
+
+/* ── Buttons ── */
+.btn{
+  border-radius:8px;font-weight:600;font-family:'DM Sans',sans-serif;
+  cursor:pointer;transition:all 0.14s ease;border:none
+}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn-sm{padding:5px 12px;font-size:11.5px}
+.btn-md{padding:9px 18px;font-size:13px}
+.btn-lg{padding:12px 26px;font-size:14px}
+.btn-primary{
+  background:#111;color:#fff;border:1px solid #111;
+  box-shadow:0 1px 4px rgba(0,0,0,0.12)
+}
+.btn-primary:not(:disabled):hover{
+  transform:translateY(-1px);box-shadow:0 4px 18px rgba(0,0,0,0.22)
+}
+.btn-ghost{
+  background:transparent;color:#888;border:1px solid var(--border)
+}
+.btn-ghost:not(:disabled):hover{box-shadow:var(--shadow)}
+.btn-outline{
+  background:transparent;color:#111;border:1px solid #111
+}
+.btn-outline:not(:disabled):hover{box-shadow:0 2px 10px rgba(0,0,0,0.10)}
+.btn-full{width:100%;text-align:center;display:block}
+
+/* ── Form fields ── */
+.field{display:flex;flex-direction:column;gap:5px}
+.field-label{
+  font-size:11px;font-weight:600;color:var(--text-muted);
+  letter-spacing:0.06em;text-transform:uppercase
+}
+.input-base{
+  background:#fff;border:1px solid var(--border);border-radius:8px;
+  padding:9px 13px;color:var(--text);font-size:13.5px;
+  font-family:'DM Sans',sans-serif;outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;width:100%;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,0.04)
+}
+.input-base:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(0,0,0,0.06)
+}
+textarea.input-base{resize:vertical;line-height:1.7}
+select.input-base{cursor:pointer}
+
+/* ── Grid helpers ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid-sidebar{display:grid;grid-template-columns:1fr 300px;gap:14px}
+.flex{display:flex}.flex-col{flex-direction:column}
+.gap-6{gap:6px}.gap-8{gap:8px}.gap-10{gap:10px}.gap-12{gap:12px}.gap-14{gap:14px}
+.items-center{align-items:center}.justify-between{justify-content:space-between}
+.flex-1{flex:1}.flex-wrap{flex-wrap:wrap}
+.mb-8{margin-bottom:8px}.mb-10{margin-bottom:10px}
+.mb-12{margin-bottom:12px}.mb-14{margin-bottom:14px}
+.mb-16{margin-bottom:16px}.mb-18{margin-bottom:18px}
+.mb-20{margin-bottom:20px}.mb-22{margin-bottom:22px}
+.mt-14{margin-top:14px}
+
+/* ── Score Ring ── */
+.score-ring-wrap{position:relative}
+.score-ring-inner{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center
+}
+
+/* ── Mini Bar ── */
+.mini-bar{display:flex;align-items:center;gap:10px}
+.mini-bar-label{font-size:12px;color:var(--text-muted);width:90px;flex-shrink:0}
+.mini-bar-track{
+  flex:1;height:5px;border-radius:3px;overflow:hidden;
+  background:linear-gradient(to right,#ececee,#e8e8ea)
+}
+.mini-bar-fill{
+  height:100%;background:linear-gradient(to right,#555,#111);
+  border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,0.15);
+  transition:width 1s ease
+}
+.mini-bar-val{font-size:11.5px;color:var(--text-dim);width:34px;text-align:right;font-family:'DM Mono',monospace}
+
+/* ── Spinner ── */
+.spinner{
+  display:inline-block;border-radius:50%;
+  border:2px solid var(--border);border-top:2px solid var(--accent);
+  animation:spin 0.7s linear infinite;flex-shrink:0
+}
+
+/* ── Dashboard header banner ── */
+.dash-banner{
+  padding:20px 24px;
+  background:linear-gradient(135deg,#fff 0%,#f2f2f4 100%);
+  border-radius:14px;border:1px solid var(--border);
+  box-shadow:var(--shadow);margin-bottom:20px
+}
+
+/* ── Session rows ── */
+.session-row{
+  padding:12px 18px;display:flex;align-items:center;
+  justify-content:space-between;cursor:pointer;transition:background 0.12s
+}
+.session-row:hover{background:var(--surface-alt)}
+.session-row+.session-row{border-top:1px solid var(--border)}
+
+/* ── Weak topic chip ── */
+.weak-chip{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 10px;background:var(--accent-soft);border-radius:7px;
+  border:1px solid var(--border);cursor:pointer;
+  transition:all 0.12s;margin-bottom:5px
+}
+.weak-chip:last-child{margin-bottom:0}
+.weak-chip:hover{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.weak-chip:hover .weak-chip-arrow{color:#fff!important}
+
+/* ── Quick-start buttons ── */
+.quick-btn-wrap{display:flex;flex-direction:column;gap:7px}
+
+/* ── Count buttons (quiz/generate) ── */
+.count-btn{
+  padding:6px 14px;border-radius:7px;cursor:pointer;font-size:13px;
+  font-family:'DM Sans',sans-serif;font-weight:600;transition:all 0.13s;
+  border:1px solid var(--border);background:transparent;color:var(--text-muted)
+}
+.count-btn.active{background:#111;color:#fff;border-color:#111;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+
+/* ── Question card ── */
+.q-card-num{
+  width:26px;height:26px;border-radius:6px;flex-shrink:0;
+  background:linear-gradient(135deg,#e8e8ea,#ddd);
+  color:var(--accent-mid);display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,0.1)
+}
+
+/* ── Evaluate result ── */
+.mistake-block{
+  padding:13px;background:linear-gradient(135deg,#f7f7f7,#f2f2f4);
+  border-radius:8px;border-left:3px solid #aaa;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.03);margin-bottom:8px
+}
+.mistake-block:last-child{margin-bottom:0}
+
+/* ── Quiz nav dots ── */
+.q-dot{
+  width:28px;height:28px;border-radius:6px;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;cursor:pointer;transition:all 0.13s
+}
+.q-dot.answered{background:var(--accent-soft);border-color:var(--accent-mid);color:var(--accent-mid)}
+.q-dot.current{background:#111;border-color:#111;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
+
+/* ── Quiz timer bar ── */
+.timer-bar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;
+  background:linear-gradient(to right,#fff,#f5f5f5);
+  border-radius:10px;border:1px solid var(--border);box-shadow:var(--shadow);
+  margin-bottom:18px
+}
+#timer-display{font-family:'DM Mono',monospace;font-size:18px;font-weight:600}
+
+/* ── Analytics bars ── */
+.bar-chart-wrap{display:flex;align-items:flex-end;gap:7px;height:158px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.bar-col-bar{
+  width:100%;border-radius:4px 4px 0 0;
+  transition:all 0.2s ease;min-height:4px;
+  box-shadow:var(--shadow)
+}
+.bar-col-bar.high{background:linear-gradient(to top,#444,#888)}
+.bar-col-bar.low{background:linear-gradient(to top,#ccc,#ddd)}
+.bar-col:hover .bar-col-bar{background:linear-gradient(to top,#111,#555)!important;box-shadow:0 4px 12px rgba(0,0,0,0.2)!important}
+.bar-col-val{font-size:9.5px;color:var(--text-muted);font-family:'DM Mono',monospace;transition:color 0.13s}
+.bar-col:hover .bar-col-val{color:var(--accent);font-weight:600}
+.bar-col-day{font-size:11px;color:var(--text-muted)}
+
+/* ── Analytics table ── */
+.perf-table{width:100%;border-collapse:collapse}
+.perf-table th{
+  padding:9px 18px;text-align:left;font-size:10.5px;font-weight:600;
+  color:var(--text-muted);letter-spacing:0.05em;text-transform:uppercase;
+  background:linear-gradient(to right,#f5f5f5,#f0f0f0)
+}
+.perf-table td{padding:11px 18px;font-size:13px;border-top:1px solid var(--border)}
+.perf-table tr{transition:background 0.12s}
+.perf-table tr:hover td{background:var(--surface-alt)}
+
+/* ── AI Tutor ── */
+#tutor-page{
+  padding:30px 32px;max-width:760px;
+  display:none;flex-direction:column;height:100vh
+}
+#tutor-page.active{display:flex}
+.chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px;margin-bottom:12px}
+.chat-msg{display:flex;animation:fadeUp 0.25s ease forwards}
+.chat-msg.user{justify-content:flex-end}
+.chat-msg.assistant{justify-content:flex-start}
+.chat-bubble{
+  max-width:80%;padding:11px 14px;font-size:13.5px;
+  line-height:1.7;white-space:pre-wrap;word-break:break-word;
+  box-shadow:var(--shadow)
+}
+.chat-bubble.user{
+  border-radius:10px 10px 3px 10px;
+  background:linear-gradient(135deg,#222,#111);color:#fff;
+  border:1px solid transparent
+}
+.chat-bubble.assistant{
+  border-radius:10px 10px 10px 3px;
+  background:#fff;color:var(--text);
+  border:1px solid var(--border)
+}
+.chat-avatar{
+  width:26px;height:26px;border-radius:7px;
+  background:linear-gradient(135deg,#e8e8ea,#ddd);
+  border:1px solid var(--border);display:flex;align-items:center;
+  justify-content:center;font-size:11px;margin-right:7px;
+  flex-shrink:0;margin-top:2px;box-shadow:var(--shadow)
+}
+.typing-indicator{display:flex;gap:4px;padding:9px 13px}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:var(--accent-mid)}
+.typing-dot:nth-child(1){animation:pulse 1.2s ease 0s infinite}
+.typing-dot:nth-child(2){animation:pulse 1.2s ease 0.2s infinite}
+.typing-dot:nth-child(3){animation:pulse 1.2s ease 0.4s infinite}
+.chat-input-bar{
+  display:flex;gap:7px;background:#fff;border-radius:10px;
+  padding:5px 5px 5px 13px;border:1px solid var(--border);
+  box-shadow:var(--shadow-md);flex-shrink:0
+}
+#chat-input{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:13.5px;line-height:1.6;resize:none
+}
+.quick-prompt{
+  padding:4px 12px;border-radius:20px;border:1px solid var(--border);
+  background:#fff;color:var(--text-muted);font-size:11px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;box-shadow:0 1px 3px rgba(0,0,0,0.06);
+  transition:all 0.12s
+}
+.quick-prompt:hover{background:#111;color:#fff;border-color:#111}
+
+/* ── Profile stats ── */
+.profile-stat{
+  text-align:center;padding:10px 8px;
+  background:linear-gradient(145deg,#f5f5f5,#eee);
+  border-radius:8px;border:1px solid var(--border);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.03)
+}
+.profile-stat-val{font-size:15px;font-weight:700;letter-spacing:-0.02em}
+.profile-stat-label{font-size:10px;color:var(--text-muted);margin-top:2px;font-weight:500}
+
+/* ── Saved / toast ── */
+#save-toast{
+  font-size:13px;color:var(--text-dim);display:none;animation:fadeIn 0.2s ease
+}
+
+/* ── Results section card ── */
+.result-section{padding:13px;border-radius:8px;border:1px solid var(--border)}
+.result-item{
+  font-size:13px;color:var(--text-dim);
+  padding:5px 0;line-height:1.5;
+  border-bottom:1px solid var(--border)
+}
+.result-item:last-child{border-bottom:none}
+
+/* ── Info banner ── */
+.info-banner{
+  padding:10px 13px;
+  background:linear-gradient(to right,#f2f2f2,#ececee);
+  border-radius:8px;font-size:12.5px;color:var(--text-muted);
+  border:1px solid var(--border)
+}
+
+/* ── Table bar ── */
+.tbar-track{width:72px;height:5px;background:linear-gradient(to right,#ececee,#e5e5e5);border-radius:3px}
+.tbar-fill{height:100%;border-radius:3px}
+
+/* ── Error box ── */
+.error-box{
+  color:#888;font-size:13px;padding:9px 13px;background:#f5f5f5;
+  border-radius:8px;border:1px solid var(--border-dark);margin-bottom:14px;display:none
+}
+
+/* ── Section heading inside card ── */
+.section-label{
+  font-weight:600;font-size:11px;color:var(--text-muted);
+  letter-spacing:0.05em;text-transform:uppercase;margin-bottom:10px
+}
+
+/* ── Flex row with space ── */
+.row-between{display:flex;justify-content:space-between;align-items:center}
+
+/* ── Mobile responsiveness ── */
+@media(max-width:768px){
+  #sidebar{width:58px}
+  .sb-logo-text,.sb-nav-label,.sb-user-info{display:none}
+  .grid-4{grid-template-columns:1fr 1fr}
+  .grid-3{grid-template-columns:1fr 1fr}
+  .grid-sidebar{grid-template-columns:1fr}
+  .page{padding:20px 16px}
+  .grid-2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- ── SIDEBAR ── -->
+  <div id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">S</div>
+      <span class="sb-logo-text">Scora</span>
+    </div>
+    <nav class="sb-nav">
+      <button class="sb-nav-btn active" data-page="dashboard"><span class="sb-nav-icon">⊞</span><span class="sb-nav-label">Dashboard</span></button>
+      <button class="sb-nav-btn" data-page="generate"><span class="sb-nav-icon">⚡</span><span class="sb-nav-label">Generate</span></button>
+      <button class="sb-nav-btn" data-page="evaluate"><span class="sb-nav-icon">✦</span><span class="sb-nav-label">Evaluate</span></button>
+      <button class="sb-nav-btn" data-page="quiz"><span class="sb-nav-icon">◈</span><span class="sb-nav-label">Quiz</span></button>
+      <button class="sb-nav-btn" data-page="performance"><span class="sb-nav-icon">▲</span><span class="sb-nav-label">Analytics</span></button>
+      <button class="sb-nav-btn" data-page="assistant"><span class="sb-nav-icon">◉</span><span class="sb-nav-label">AI Tutor</span></button>
+      <button class="sb-nav-btn" data-page="profile"><span class="sb-nav-icon">○</span><span class="sb-nav-label">Profile</span></button>
+    </nav>
+    <div class="sb-divider"></div>
+    <button class="sb-collapse-btn" id="sb-toggle">←</button>
+    <div class="sb-user" id="sb-user" onclick="navigate('profile')">
+      <div class="sb-avatar" id="sb-avatar">?</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name" id="sb-name">Set your name</div>
+        <div class="sb-user-sub" id="sb-sub">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <main id="main">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active animate-up" id="page-dashboard">
+      <div class="dash-banner">
+        <div class="page-title" id="dash-greeting">Good morning 👋</div>
+        <div style="color:var(--text-muted);font-size:13px" id="dash-sub">3 weak topics need revision before your next test.</div>
+      </div>
+
+      <div class="grid-4 mb-20">
+        <div class="card card-gradient card-lift"><div style="font-size:26px;font-weight:800;letter-spacing:-0.04em;margin-bottom:2px">248</div><div style="font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:3px">Questions</div><div style="font-size:11px;color:var(--text-dim)">+12 today</div></div>
+        <div class="card card-gradient card-lift"><div style="font-size:26px;font-weight:800;letter-spacing:-0.04em;margin-bottom:2px">73%</div><div style="font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:3px">Avg Score</div><div style="font-size:11px;color:var(--text-dim)">+4% this week</div></div>
+        <div class="card card-gradient card-lift"><div style="font-size:26px;font-weight:800;letter-spacing:-0.04em;margin-bottom:2px">14d</div><div style="font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:3px">Streak</div><div style="font-size:11px;color:var(--text-dim)">Keep it up!</div></div>
+        <div class="card card-gradient card-lift"><div style="font-size:26px;font-weight:800;letter-spacing:-0.04em;margin-bottom:2px">31</div><div style="font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:3px">Mastered</div><div style="font-size:11px;color:var(--text-dim)">of 58 topics</div></div>
+      </div>
+
+      <div class="grid-sidebar mb-14">
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to right,#fff,#fafafa)">
+            <span style="font-weight:600;font-size:13px">Recent Sessions</span>
+            <button class="btn btn-ghost btn-sm" onclick="navigate('performance')">View All</button>
+          </div>
+          <div class="session-row" onclick="navigate('evaluate')">
+            <div><div style="font-size:13px;font-weight:500;margin-bottom:1px">Light – Reflection &amp; Refraction</div><div style="font-size:11px;color:var(--text-muted)">Science</div></div>
+            <div style="display:flex;align-items:center;gap:10px"><span class="tag tag-pos">High</span><span style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace">82%</span></div>
+          </div>
+          <div class="session-row" onclick="navigate('evaluate')">
+            <div><div style="font-size:13px;font-weight:500;margin-bottom:1px">Quadratic Equations</div><div style="font-size:11px;color:var(--text-muted)">Maths</div></div>
+            <div style="display:flex;align-items:center;gap:10px"><span class="tag tag-warn">Medium</span><span style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace">61%</span></div>
+          </div>
+          <div class="session-row" onclick="navigate('evaluate')">
+            <div><div style="font-size:13px;font-weight:500;margin-bottom:1px">Chemical Reactions &amp; Equations</div><div style="font-size:11px;color:var(--text-muted)">Science</div></div>
+            <div style="display:flex;align-items:center;gap:10px"><span class="tag tag-neg">Low</span><span style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace">45%</span></div>
+          </div>
+          <div class="session-row" style="border-bottom:none" onclick="navigate('evaluate')">
+            <div><div style="font-size:13px;font-weight:500;margin-bottom:1px">Nationalism in Europe</div><div style="font-size:11px;color:var(--text-muted)">Social Science</div></div>
+            <div style="display:flex;align-items:center;gap:10px"><span class="tag tag-pos">High</span><span style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace">78%</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card card-gradient">
+            <div class="section-label">Needs Revision</div>
+            <div class="weak-chip" onclick="navigate('generate')"><span style="font-size:12px">Chemical Bonding</span><span style="font-size:10px;color:var(--text-muted)" class="weak-chip-arrow">Practice →</span></div>
+            <div class="weak-chip" onclick="navigate('generate')"><span style="font-size:12px">Trigonometry Applications</span><span style="font-size:10px;color:var(--text-muted)" class="weak-chip-arrow">Practice →</span></div>
+            <div class="weak-chip" onclick="navigate('generate')"><span style="font-size:12px">Respiratory System</span><span style="font-size:10px;color:var(--text-muted)" class="weak-chip-arrow">Practice →</span></div>
+            <div class="weak-chip" onclick="navigate('generate')"><span style="font-size:12px">French Revolution</span><span style="font-size:10px;color:var(--text-muted)" class="weak-chip-arrow">Practice →</span></div>
+          </div>
+          <div class="card card-gradient">
+            <div class="section-label">Quick Start</div>
+            <div class="quick-btn-wrap">
+              <button class="btn btn-primary btn-md btn-full" onclick="navigate('quiz')">⚡ Start Quiz</button>
+              <button class="btn btn-ghost btn-md btn-full" onclick="navigate('generate')">Generate Questions</button>
+              <button class="btn btn-ghost btn-md btn-full" onclick="navigate('evaluate')">Evaluate Answer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-gradient">
+        <div style="font-weight:600;font-size:13px;margin-bottom:16px">Subject Accuracy — This Week</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="mini-bar"><span class="mini-bar-label">Science</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:68%"></div></div><span class="mini-bar-val">68%</span></div>
+          <div class="mini-bar"><span class="mini-bar-label">Mathematics</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:74%"></div></div><span class="mini-bar-val">74%</span></div>
+          <div class="mini-bar"><span class="mini-bar-label">English</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:85%"></div></div><span class="mini-bar-val">85%</span></div>
+          <div class="mini-bar"><span class="mini-bar-label">Social Sci</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:72%"></div></div><span class="mini-bar-val">72%</span></div>
+          <div class="mini-bar"><span class="mini-bar-label">Hindi</span><div class="mini-bar-track"><div class="mini-bar-fill" style="width:61%"></div></div><span class="mini-bar-val">61%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GENERATE ══ -->
+    <div class="page animate-up" id="page-generate" style="max-width:860px">
+      <div class="page-title">Question Generator</div>
+      <div class="page-sub">AI-generated exam-style questions tailored to your syllabus</div>
+
+      <div class="card card-gradient mb-16">
+        <div class="grid-3 mb-12">
+          <div class="field">
+            <label class="field-label">Class</label>
+            <select class="input-base" id="gen-class"><option value="9">Class 9</option><option value="10" selected>Class 10</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Board</label>
+            <select class="input-base" id="gen-board"><option value="CBSE" selected>CBSE</option><option value="ICSE">ICSE</option><option value="State">State Board</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Subject</label>
+            <select class="input-base" id="gen-subject"><option>Science</option><option>Mathematics</option><option>Social Science</option><option>English</option><option>Hindi</option></select>
+          </div>
+        </div>
+        <div class="grid-3 mb-12">
+          <div class="field">
+            <label class="field-label">Chapter / Topic</label>
+            <input class="input-base" id="gen-chapter" value="Light – Reflection &amp; Refraction" placeholder="e.g. Quadratic Equations"/>
+          </div>
+          <div class="field">
+            <label class="field-label">Difficulty</label>
+            <select class="input-base" id="gen-difficulty">
+              <option value="easy">Easy</option><option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option><option value="board">Board Level</option><option value="hots">HOTS</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Question Type</label>
+            <select class="input-base" id="gen-type">
+              <option value="short_answer">Short Answer</option><option value="long_answer">Long Answer</option>
+              <option value="mcq">MCQ</option><option value="numerical">Numerical</option>
+              <option value="assertion_reason">Assertion-Reason</option><option value="case_study">Case Study</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div class="field">
+            <label class="field-label">Count</label>
+            <div style="display:flex;gap:6px">
+              <button class="count-btn" data-count="3" onclick="setCount(this,3)">3</button>
+              <button class="count-btn active" data-count="5" onclick="setCount(this,5)">5</button>
+              <button class="count-btn" data-count="10" onclick="setCount(this,10)">10</button>
+              <button class="count-btn" data-count="15" onclick="setCount(this,15)">15</button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-lg" id="gen-btn" onclick="generateQuestions()" style="margin-left:auto">⚡ Generate</button>
+        </div>
+      </div>
+
+      <div class="error-box" id="gen-error"></div>
+      <div id="gen-results"></div>
+    </div>
+
+    <!-- ══ EVALUATE ══ -->
+    <div class="page animate-up" id="page-evaluate" style="max-width:860px">
+      <div class="page-title">Answer Evaluator</div>
+      <div class="page-sub">Examiner-level AI feedback on your written answers</div>
+
+      <div class="card card-gradient mb-16">
+        <div style="display:grid;grid-template-columns:1fr 160px;gap:13px;margin-bottom:13px">
+          <div class="field">
+            <label class="field-label">Subject</label>
+            <select class="input-base" id="eval-subject"><option>Science</option><option>Mathematics</option><option>Social Science</option><option>English</option><option>Hindi</option></select>
+          </div>
+          <div class="field">
+            <label class="field-label">Total Marks</label>
+            <input class="input-base" id="eval-marks" type="number" value="5" placeholder="5"/>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:13px;margin-bottom:14px">
+          <div class="field">
+            <label class="field-label">Question</label>
+            <textarea class="input-base" id="eval-question" rows="3" placeholder="Paste or type the exam question…"></textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">Your Answer</label>
+            <textarea class="input-base" id="eval-answer" rows="8" placeholder="Write your answer as you would in an exam…"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span id="eval-error" style="color:#999;font-size:13px;flex:1;display:none"></span>
+          <button class="btn btn-primary btn-lg" id="eval-btn" onclick="evaluateAnswer()" style="margin-left:auto">✦ Evaluate</button>
+        </div>
+      </div>
+      <div id="eval-results"></div>
+    </div>
+
+    <!-- ══ QUIZ ══ -->
+    <div class="page animate-up" id="page-quiz">
+      <div id="quiz-config" style="max-width:560px">
+        <div class="page-title">Quiz Mode</div>
+        <div class="page-sub">Timed exam simulation with instant AI evaluation</div>
+        <div class="card card-gradient">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="field">
+              <label class="field-label">Subject</label>
+              <select class="input-base" id="quiz-subject"><option>Science</option><option>Mathematics</option><option>Social Science</option><option>English</option><option>Hindi</option></select>
+            </div>
+            <div class="field">
+              <label class="field-label">Chapter</label>
+              <input class="input-base" id="quiz-chapter" value="Light – Reflection &amp; Refraction" placeholder="e.g. Chemical Reactions"/>
+            </div>
+            <div class="field">
+              <label class="field-label">Difficulty</label>
+              <select class="input-base" id="quiz-difficulty"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option><option value="board">Board Level</option></select>
+            </div>
+            <div class="field">
+              <label class="field-label">Questions</label>
+              <div style="display:flex;gap:7px">
+                <button class="count-btn" data-qcount="3" onclick="setQCount(this,3)">3 Qs</button>
+                <button class="count-btn active" data-qcount="5" onclick="setQCount(this,5)">5 Qs</button>
+                <button class="count-btn" data-qcount="10" onclick="setQCount(this,10)">10 Qs</button>
+              </div>
+            </div>
+            <div class="info-banner">⏱ Time: <strong id="quiz-time-label">25 minutes</strong></div>
+            <button class="btn btn-primary btn-lg btn-full" id="quiz-start-btn" onclick="startQuiz()">▶ Start Quiz</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="quiz-active" style="max-width:750px;display:none">
+        <div class="timer-bar">
+          <div id="quiz-dots" style="display:flex;gap:5px"></div>
+          <div id="timer-display">25:00</div>
+        </div>
+        <div class="card card-gradient mb-14">
+          <div style="display:flex;gap:6px;margin-bottom:14px" id="quiz-tags"></div>
+          <div style="font-size:15px;font-weight:500;line-height:1.7;margin-bottom:18px" id="quiz-question-text"></div>
+          <div class="field">
+            <label class="field-label">Your Answer</label>
+            <textarea class="input-base" id="quiz-answer-input" rows="8" placeholder="Write your answer here…"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <button class="btn btn-ghost btn-md" id="quiz-prev-btn" onclick="quizNav(-1)">← Prev</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-md" id="quiz-next-btn" onclick="quizNav(1)">Next →</button>
+            <button class="btn btn-outline btn-md" id="quiz-submit-btn" onclick="submitQuiz()" style="display:none">✓ Submit</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="quiz-results" style="max-width:860px;display:none">
+        <div class="page-title">Results</div>
+        <div id="quiz-result-sub" class="page-sub"></div>
+        <div class="card card-gradient card-highlight mb-16" style="padding:22px 26px">
+          <div style="display:flex;align-items:center;gap:24px">
+            <div id="quiz-score-ring"></div>
+            <div>
+              <div style="font-size:30px;font-weight:800;letter-spacing:-0.04em;margin-bottom:4px" id="quiz-pct-label">0%</div>
+              <div style="color:var(--text-muted);font-size:13px;margin-bottom:8px" id="quiz-verdict"></div>
+              <div style="display:flex;gap:6px" id="quiz-result-tags"></div>
+            </div>
+          </div>
+        </div>
+        <div id="quiz-q-results" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div style="margin-top:18px;display:flex;gap:8px">
+          <button class="btn btn-primary btn-md" onclick="resetQuiz()">Try Again</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PERFORMANCE ══ -->
+    <div class="page animate-up" id="page-performance" style="max-width:1060px">
+      <div class="page-title">Analytics</div>
+      <div class="page-sub">Your personalised performance insights</div>
+
+      <div class="grid-4 mb-18">
+        <div class="card card-gradient card-lift" style="padding:16px 18px"><div style="font-size:23px;font-weight:800;letter-spacing:-0.04em;margin-bottom:2px">248</div><div style="font-size:11px;color:var(--text-muted);font-weight:500">Questions</div></div>
+        <div class="card card-gradient card-lift" style="padding:16px 18px"><div style="font-size:23px;font-weight:800;letter-spacing:-0.04em;margin-bottom:2px">73%</div><div style="font-size:11px;color:var(--text-muted);font-weight:500">Avg Accuracy</div></div>
+        <div class="card card-gradient card-lift" style="padding:16px 18px"><div style="font-size:23px;font-weight:800;letter-spacing:-0.04em;margin-bottom:2px">34h</div><div style="font-size:11px;color:var(--text-muted);font-weight:500">Study Hours</div></div>
+        <div class="card card-gradient card-lift" style="padding:16px 18px"><div style="font-size:23px;font-weight:800;letter-spacing:-0.04em;margin-bottom:2px">67%</div><div style="font-size:11px;color:var(--text-muted);font-weight:500">Exam Readiness</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;margin-bottom:14px">
+        <div class="card card-gradient">
+          <div style="font-weight:600;font-size:13px;margin-bottom:18px">Score Trend — This Week</div>
+          <div class="bar-chart-wrap" id="bar-chart"></div>
+        </div>
+        <div class="card card-gradient">
+          <div style="font-weight:600;font-size:13px;margin-bottom:14px">Mistake Types</div>
+          <div id="mistake-bars"></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;box-shadow:var(--shadow)">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:linear-gradient(to right,#fff,#fafafa)">
+          <span style="font-weight:600;font-size:13px">Subject Performance</span>
+        </div>
+        <table class="perf-table">
+          <thead><tr><th>Subject</th><th>Accuracy</th><th>Sessions</th><th>Trend</th><th>Status</th></tr></thead>
+          <tbody id="perf-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ AI TUTOR ══ -->
+    <div id="tutor-page" data-page="assistant">
+      <div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end;flex-shrink:0">
+        <div>
+          <div class="page-title">AI Tutor</div>
+          <div style="color:var(--text-muted);font-size:13px">Concepts, numericals, mnemonics — ask anything</div>
+        </div>
+        <div class="field" style="width:160px">
+          <select class="input-base" id="tutor-subject">
+            <option>Science</option><option>Mathematics</option><option>Social Science</option><option>English</option><option>Hindi</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;flex-shrink:0" id="quick-prompts"></div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-bar">
+        <textarea id="chat-input" rows="2" placeholder="Ask anything…"></textarea>
+        <button class="btn btn-primary btn-md" id="chat-send-btn" onclick="sendChat()" style="align-self:flex-end">→</button>
+      </div>
+    </div>
+
+    <!-- ══ PROFILE ══ -->
+    <div class="page animate-up" id="page-profile" style="max-width:680px">
+      <div class="page-title">Profile</div>
+      <div class="page-sub">Your details personalise AI-generated questions and feedback</div>
+
+      <div class="card card-gradient mb-16" style="padding:22px 24px">
+        <div style="display:flex;align-items:center;gap:18px;margin-bottom:20px">
+          <div style="width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#444,#111);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,0.2)" id="profile-avatar-big">?</div>
+          <div>
+            <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em" id="profile-display-name">Your Name</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:2px" id="profile-display-sub">— </div>
+          </div>
+        </div>
+        <div class="grid-4">
+          <div class="profile-stat"><div class="profile-stat-val">248</div><div class="profile-stat-label">Questions</div></div>
+          <div class="profile-stat"><div class="profile-stat-val">73%</div><div class="profile-stat-label">Avg Accuracy</div></div>
+          <div class="profile-stat"><div class="profile-stat-val">14d</div><div class="profile-stat-label">Streak</div></div>
+          <div class="profile-stat"><div class="profile-stat-val">31/58</div><div class="profile-stat-label">Mastered</div></div>
+        </div>
+      </div>
+
+      <div class="card mb-14">
+        <div class="section-label">Personal Details</div>
+        <div style="display:flex;flex-direction:column;gap:13px">
+          <div class="field"><label class="field-label">Full Name</label><input class="input-base" id="prof-name" placeholder="e.g. Arad Khan"/></div>
+          <div class="grid-2">
+            <div class="field"><label class="field-label">Class</label>
+              <select class="input-base" id="prof-class"><option value="">Select</option><option value="9">Class 9</option><option value="10">Class 10</option></select></div>
+            <div class="field"><label class="field-label">Board</label>
+              <select class="input-base" id="prof-board"><option value="">Select</option><option value="CBSE">CBSE</option><option value="ICSE">ICSE</option><option value="State">State Board</option></select></div>
+          </div>
+          <div class="field"><label class="field-label">School (optional)</label><input class="input-base" id="prof-school" placeholder="e.g. Delhi Public School"/></div>
+          <div class="field"><label class="field-label">Target Exam (optional)</label><input class="input-base" id="prof-exam" placeholder="e.g. Board Exams, NTSE"/></div>
+          <div class="field"><label class="field-label">Exam Date (optional)</label><input class="input-base" id="prof-date" type="date"/></div>
+        </div>
+      </div>
+
+      <div class="card mb-22">
+        <div class="section-label">Study Preferences</div>
+        <div class="grid-2">
+          <div class="field"><label class="field-label">Default Difficulty</label>
+            <select class="input-base" id="prof-difficulty"><option value="medium" selected>Medium</option><option value="easy">Easy</option><option value="hard">Hard</option><option value="board">Board Level</option></select></div>
+          <div class="field"><label class="field-label">Question Type</label>
+            <select class="input-base" id="prof-qtype"><option value="short_answer">Short Answer</option><option value="long_answer">Long Answer</option><option value="mcq">MCQ</option><option value="numerical">Numerical</option></select></div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn btn-primary btn-lg" onclick="saveProfile()">Save Profile</button>
+        <span id="save-toast">✓ Saved</span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+const state = {
+  profile: { name:'', class:'10', board:'CBSE', school:'', targetExam:'', examDate:'', difficulty:'medium', qtype:'short_answer' },
+  genCount: 5,
+  quizCount: 5,
+  quizQuestions: [],
+  quizAnswers: {},
+  quizCurrent: 0,
+  quizCurText: '',
+  quizTimer: null,
+  quizTimeLeft: 0,
+  chatHistory: []
+};
+
+// Load profile from localStorage
+const saved = localStorage.getItem('scora_profile');
+if (saved) try { Object.assign(state.profile, JSON.parse(saved)); } catch(e){}
+
+// ── Navigation ─────────────────────────────────────────────────────────────────
+function navigate(id) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const tutorPage = document.getElementById('tutor-page');
+  tutorPage.classList.remove('active');
+
+  // Update nav buttons
+  document.querySelectorAll('.sb-nav-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector(`.sb-nav-btn[data-page="${id}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  if (id === 'assistant') {
+    tutorPage.classList.add('active');
+  } else {
+    const page = document.getElementById('page-' + id);
+    if (page) { page.classList.add('active'); page.classList.add('animate-up'); setTimeout(() => page.classList.remove('animate-up'), 500); }
+  }
+}
+
+document.querySelectorAll('.sb-nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => navigate(btn.dataset.page));
+});
+
+// ── Sidebar collapse ───────────────────────────────────────────────────────────
+const sbToggle = document.getElementById('sb-toggle');
+const sidebar = document.getElementById('sidebar');
+sbToggle.addEventListener('click', () => {
+  const collapsed = sidebar.classList.toggle('collapsed');
+  sbToggle.textContent = collapsed ? '→' : '←';
+});
+
+// ── Profile ────────────────────────────────────────────────────────────────────
+function getInitials(name) {
+  if (!name) return '?';
+  return name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+}
+
+function updateSidebarProfile() {
+  const p = state.profile;
+  document.getElementById('sb-avatar').textContent = getInitials(p.name);
+  document.getElementById('sb-name').textContent = p.name || 'Set your name';
+  document.getElementById('sb-sub').textContent = (p.class ? 'Class ' + p.class : '—') + (p.board ? ' · ' + p.board : '');
+}
+
+function updateDashboard() {
+  const p = state.profile;
+  const name = p.name ? p.name.split(' ')[0] : 'there';
+  document.getElementById('dash-greeting').textContent = 'Good morning, ' + name + ' 👋';
+  if (p.examDate) {
+    const d = new Date(p.examDate);
+    document.getElementById('dash-sub').innerHTML = 'Exam on <strong>' + d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + '</strong> — stay consistent.';
+  }
+}
+
+function updateProfilePage() {
+  const p = state.profile;
+  document.getElementById('prof-name').value = p.name || '';
+  document.getElementById('prof-class').value = p.class || '';
+  document.getElementById('prof-board').value = p.board || '';
+  document.getElementById('prof-school').value = p.school || '';
+  document.getElementById('prof-exam').value = p.targetExam || '';
+  document.getElementById('prof-date').value = p.examDate || '';
+  document.getElementById('prof-difficulty').value = p.difficulty || 'medium';
+  document.getElementById('prof-qtype').value = p.qtype || 'short_answer';
+  document.getElementById('profile-avatar-big').textContent = getInitials(p.name);
+  document.getElementById('profile-display-name').textContent = p.name || 'Your Name';
+  document.getElementById('profile-display-sub').textContent = (p.class ? 'Class ' + p.class : '—') + (p.board ? ' · ' + p.board : '') + (p.school ? ' · ' + p.school : '');
+}
+
+function saveProfile() {
+  state.profile.name = document.getElementById('prof-name').value;
+  state.profile.class = document.getElementById('prof-class').value;
+  state.profile.board = document.getElementById('prof-board').value;
+  state.profile.school = document.getElementById('prof-school').value;
+  state.profile.targetExam = document.getElementById('prof-exam').value;
+  state.profile.examDate = document.getElementById('prof-date').value;
+  state.profile.difficulty = document.getElementById('prof-difficulty').value;
+  state.profile.qtype = document.getElementById('prof-qtype').value;
+  localStorage.setItem('scora_profile', JSON.stringify(state.profile));
+  updateSidebarProfile();
+  updateDashboard();
+  updateProfilePage();
+  const toast = document.getElementById('save-toast');
+  toast.style.display = 'inline';
+  setTimeout(() => toast.style.display = 'none', 2400);
+}
+
+// ── API helper ─────────────────────────────────────────────────────────────────
+async function callClaude(userContent, systemPrompt) {
+  const body = { model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: userContent }] };
+  if (systemPrompt) body.system = systemPrompt;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  return data.content?.map(c => c.text || '').join('') || '';
+}
+
+async function callClaudeChat(messages, systemPrompt) {
+  const body = { model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages };
+  if (systemPrompt) body.system = systemPrompt;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  return data.content?.map(c => c.text || '').join('') || '';
+}
+
+function parseJSON(txt) { return JSON.parse(txt.replace(/```json|```/g, '').trim()); }
+
+function setLoading(btnId, loading, defaultText) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  if (loading) {
+    btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:7px"><span class="spinner" style="width:14px;height:14px"></span> Loading…</span>';
+  } else {
+    btn.innerHTML = defaultText;
+  }
+}
+
+// ── Tag helper ─────────────────────────────────────────────────────────────────
+function tag(text, variant='default') {
+  return `<span class="tag tag-${variant}">${text}</span>`;
+}
+
+// ── Score Ring SVG ─────────────────────────────────────────────────────────────
+function scoreRingSVG(score, total, size=108) {
+  const pct = total ? score/total : 0;
+  const r = 42, circ = 2*Math.PI*r;
+  const offset = circ*(1-pct);
+  const color = pct>=0.8?'#111':pct>=0.5?'#666':'#bbb';
+  return `<div style="position:relative;width:${size}px;height:${size}px">
+    <svg width="${size}" height="${size}" viewBox="0 0 100 100" style="transform:rotate(-90deg)">
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="#ebebeb" stroke-width="7"/>
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="7"
+        stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
+        style="transition:stroke-dashoffset 1s ease"/>
+    </svg>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <span style="font-size:${size*0.21}px;font-weight:700;color:${color};line-height:1">${score}</span>
+      <span style="font-size:${size*0.1}px;color:#999">/${total}</span>
+    </div>
+  </div>`;
+}
+
+// ── GENERATE ───────────────────────────────────────────────────────────────────
+function setCount(el, n) {
+  document.querySelectorAll('.count-btn[data-count]').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  state.genCount = n;
+}
+
+async function generateQuestions() {
+  const cls    = document.getElementById('gen-class').value;
+  const board  = document.getElementById('gen-board').value;
+  const subj   = document.getElementById('gen-subject').value;
+  const chap   = document.getElementById('gen-chapter').value;
+  const diff   = document.getElementById('gen-difficulty').value;
+  const type   = document.getElementById('gen-type').value;
+  const count  = state.genCount;
+  const errEl  = document.getElementById('gen-error');
+  const resEl  = document.getElementById('gen-results');
+
+  errEl.style.display = 'none';
+  resEl.innerHTML = '';
+  setLoading('gen-btn', true, '⚡ Generate');
+
+  try {
+    const prompt = `Generate ${count} ${diff} ${type.replace(/_/g,' ')} questions for Class ${cls} ${board} ${subj}, Chapter: "${chap}".\nReturn ONLY a JSON array, no markdown:\n[{"q":"question","marks":2,"hint":"key concept"}]`;
+    const txt = await callClaude(prompt);
+    const questions = parseJSON(txt);
+
+    let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:13px;font-weight:600">${questions.length} Questions Generated</span>
+      <div style="display:flex;gap:6px">${tag(diff.toUpperCase())}${tag(type.replace(/_/g,' ').toUpperCase())}</div>
+    </div><div style="display:flex;flex-direction:column;gap:10px">`;
+
+    questions.forEach((q, i) => {
+      html += `<div class="card card-lift" style="animation:fadeUp 0.3s ease ${i*0.05}s both">
+        <div style="display:flex;gap:12px">
+          <div class="q-card-num">Q${i+1}</div>
+          <div style="flex:1">
+            <div style="font-size:13.5px;line-height:1.65;margin-bottom:8px">${q.q}</div>
+            <div style="display:flex;gap:6px">${tag(q.marks+' marks')}${q.hint?tag('🔑 '+q.hint):''}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    resEl.innerHTML = html;
+  } catch(e) {
+    errEl.textContent = 'Generation failed. Please try again.';
+    errEl.style.display = 'block';
+  }
+  setLoading('gen-btn', false, '⚡ Generate');
+}
+
+// ── EVALUATE ───────────────────────────────────────────────────────────────────
+async function evaluateAnswer() {
+  const subj     = document.getElementById('eval-subject').value;
+  const marks    = document.getElementById('eval-marks').value;
+  const question = document.getElementById('eval-question').value.trim();
+  const answer   = document.getElementById('eval-answer').value.trim();
+  const errEl    = document.getElementById('eval-error');
+  const resEl    = document.getElementById('eval-results');
+
+  if (!question || !answer) {
+    errEl.textContent = 'Enter both question and answer.';
+    errEl.style.display = 'inline'; return;
+  }
+  errEl.style.display = 'none';
+  resEl.innerHTML = '';
+  setLoading('eval-btn', true, '✦ Evaluate');
+
+  try {
+    const prompt = `You are a strict CBSE ${subj} examiner for Class ${state.profile.class||'10'}.
+Evaluate the student answer. Return ONLY valid JSON, no markdown.
+
+Question: ${question}
+Total Marks: ${marks}
+Student Answer: ${answer}
+
+JSON: {"marks_awarded":N,"total_marks":${marks},"percentage":N,"accuracy_level":"Excellent|Good|Average|Poor","strengths":["..."],"mistakes":[{"line":"...","issue":"...","correction":"..."}],"missing_keywords":["..."],"missing_concepts":["..."],"improvements":["..."],"ideal_answer_summary":"...","confidence_score":N,"examiner_note":"..."}`;
+
+    const txt = await callClaude(prompt);
+    const r = parseJSON(txt);
+    const accVariant = r.accuracy_level==='Excellent'?'strong':r.accuracy_level==='Good'?'pos':r.accuracy_level==='Average'?'warn':'neg';
+
+    let html = `<div style="animation:fadeUp 0.4s ease forwards">
+      <div class="card card-gradient card-highlight" style="padding:22px 26px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:24px">
+          ${scoreRingSVG(r.marks_awarded, r.total_marks, 108)}
+          <div style="flex:1">
+            <div style="display:flex;gap:6px;margin-bottom:8px">${tag(r.accuracy_level,accVariant)}${tag('Confidence '+r.confidence_score+'%')}</div>
+            <div style="font-size:12px;color:#999;font-style:italic;margin-bottom:6px;line-height:1.6;font-family:'DM Mono',monospace">"${r.examiner_note}"</div>
+            <div style="font-size:28px;font-weight:800;letter-spacing:-0.04em">${r.percentage}%</div>
+          </div>
+        </div>
+      </div>`;
+
+    if (r.strengths?.length || r.missing_concepts?.length) {
+      html += `<div class="grid-2 mb-12">`;
+      if (r.strengths?.length) {
+        html += `<div class="card"><div class="section-label">✓ Strengths</div>` +
+          r.strengths.map(s => `<div class="result-item">· ${s}</div>`).join('') + `</div>`;
+      }
+      if (r.missing_concepts?.length) {
+        html += `<div class="card"><div class="section-label">✗ Missing Concepts</div>` +
+          r.missing_concepts.map(c => `<div class="result-item">· ${c}</div>`).join('') + `</div>`;
+      }
+      html += `</div>`;
+    }
+
+    if (r.mistakes?.length) {
+      html += `<div class="card mb-12"><div class="section-label">Line-by-Line Feedback</div>` +
+        r.mistakes.map(m => `<div class="mistake-block">
+          <div style="font-size:11px;color:#999;margin-bottom:3px;font-family:'DM Mono',monospace">"${m.line}"</div>
+          <div style="font-size:12.5px;color:#888;margin-bottom:3px">⚠ ${m.issue}</div>
+          <div style="font-size:12.5px;color:#444;font-weight:600">✓ ${m.correction}</div>
+        </div>`).join('') + `</div>`;
+    }
+
+    if (r.missing_keywords?.length || r.improvements?.length) {
+      html += `<div class="grid-2 mb-12">`;
+      if (r.missing_keywords?.length) {
+        html += `<div class="card"><div class="section-label">Missing Keywords</div><div style="display:flex;flex-wrap:wrap;gap:5px">` +
+          r.missing_keywords.map(k => tag(k)).join('') + `</div></div>`;
+      }
+      if (r.improvements?.length) {
+        html += `<div class="card"><div class="section-label">How to Improve</div>` +
+          r.improvements.map((imp,i) => `<div style="font-size:12px;color:var(--text-dim);padding:4px 0;border-bottom:1px solid var(--border)">${i+1}. ${imp}</div>`).join('') + `</div>`;
+      }
+      html += `</div>`;
+    }
+
+    if (r.ideal_answer_summary) {
+      html += `<div class="card card-gradient" style="border-color:var(--accent-mid)">
+        <div class="section-label">Model Answer Summary</div>
+        <div style="font-size:13px;line-height:1.75;font-family:'DM Mono',monospace">${r.ideal_answer_summary}</div>
+      </div>`;
+    }
+    html += '</div>';
+    resEl.innerHTML = html;
+  } catch(e) {
+    errEl.textContent = 'Evaluation failed. Please try again.';
+    errEl.style.display = 'inline';
+  }
+  setLoading('eval-btn', false, '✦ Evaluate');
+}
+
+// ── QUIZ ───────────────────────────────────────────────────────────────────────
+function setQCount(el, n) {
+  document.querySelectorAll('.count-btn[data-qcount]').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  state.quizCount = n;
+  document.getElementById('quiz-time-label').textContent = (n * 5) + ' minutes';
+}
+
+async function startQuiz() {
+  const subj = document.getElementById('quiz-subject').value;
+  const chap = document.getElementById('quiz-chapter').value;
+  const diff = document.getElementById('quiz-difficulty').value;
+  setLoading('quiz-start-btn', true, '▶ Start Quiz');
+  try {
+    const prompt = `Generate exactly ${state.quizCount} ${diff} short-answer questions (2-3 marks each) for Class ${state.profile.class||'10'} ${state.profile.board||'CBSE'} ${subj}, Chapter: "${chap}".\nReturn ONLY JSON array:\n[{"q":"question","marks":3,"key_points":["p1","p2","p3"]}]`;
+    const txt = await callClaude(prompt);
+    state.quizQuestions = parseJSON(txt);
+    state.quizAnswers = {};
+    state.quizCurrent = 0;
+    state.quizCurText = '';
+    state.quizTimeLeft = state.quizQuestions.length * 5 * 60;
+    showQuizActive();
+    startTimer();
+  } catch(e) { alert('Failed to load quiz. Try again.'); }
+  setLoading('quiz-start-btn', false, '▶ Start Quiz');
+}
+
+function showQuizActive() {
+  document.getElementById('quiz-config').style.display = 'none';
+  document.getElementById('quiz-active').style.display = 'block';
+  document.getElementById('quiz-results').style.display = 'none';
+  renderQuizQuestion();
+}
+
+function renderQuizDots() {
+  const dotsEl = document.getElementById('quiz-dots');
+  dotsEl.innerHTML = state.quizQuestions.map((_, i) => {
+    let cls = 'q-dot';
+    if (i === state.quizCurrent) cls += ' current';
+    else if (state.quizAnswers[i]) cls += ' answered';
+    return `<span class="${cls}" onclick="quizJump(${i})">${i+1}</span>`;
+  }).join('');
+}
+
+function renderQuizQuestion() {
+  const q = state.quizQuestions[state.quizCurrent];
+  const n = state.quizCurrent, total = state.quizQuestions.length;
+  document.getElementById('quiz-tags').innerHTML = tag('Q'+(n+1)+' / '+total) + ' ' + tag(q.marks+' marks') + ' ' + tag(document.getElementById('quiz-difficulty').value.toUpperCase());
+  document.getElementById('quiz-question-text').textContent = q.q;
+  document.getElementById('quiz-answer-input').value = state.quizAnswers[n] || state.quizCurText || '';
+  document.getElementById('quiz-prev-btn').disabled = n === 0;
+  const isLast = n === total - 1;
+  document.getElementById('quiz-next-btn').style.display = isLast ? 'none' : '';
+  document.getElementById('quiz-submit-btn').style.display = isLast ? '' : 'none';
+  renderQuizDots();
+}
+
+function saveCurrentAnswer() {
+  const val = document.getElementById('quiz-answer-input').value.trim();
+  if (val) state.quizAnswers[state.quizCurrent] = val;
+}
+
+function quizNav(dir) {
+  saveCurrentAnswer();
+  state.quizCurrent += dir;
+  state.quizCurText = '';
+  renderQuizQuestion();
+}
+
+function quizJump(idx) {
+  saveCurrentAnswer();
+  state.quizCurrent = idx;
+  state.quizCurText = '';
+  renderQuizQuestion();
+}
+
+function startTimer() {
+  clearInterval(state.quizTimer);
+  state.quizTimer = setInterval(() => {
+    state.quizTimeLeft--;
+    const el = document.getElementById('timer-display');
+    if (el) {
+      const m = Math.floor(state.quizTimeLeft/60), s = state.quizTimeLeft%60;
+      el.textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+      el.style.color = state.quizTimeLeft<60?'#aaa':state.quizTimeLeft<300?'#777':'#111';
+    }
+    if (state.quizTimeLeft <= 0) { clearInterval(state.quizTimer); submitQuiz(); }
+  }, 1000);
+}
+
+async function submitQuiz() {
+  saveCurrentAnswer();
+  clearInterval(state.quizTimer);
+  document.getElementById('quiz-active').style.display = 'none';
+  document.getElementById('quiz-results').style.display = 'block';
+
+  const sub = document.getElementById('quiz-subject').value;
+  const chap = document.getElementById('quiz-chapter').value;
+  document.getElementById('quiz-result-sub').textContent = chap + ' · ' + sub;
+
+  // Placeholder ring until evals complete
+  document.getElementById('quiz-score-ring').innerHTML = scoreRingSVG(0, state.quizQuestions.length*3, 112);
+  document.getElementById('quiz-pct-label').textContent = '—';
+  document.getElementById('quiz-verdict').textContent = 'Evaluating answers…';
+  document.getElementById('quiz-result-tags').innerHTML = '';
+
+  // Render question result cards as placeholders
+  const qrEl = document.getElementById('quiz-q-results');
+  qrEl.innerHTML = state.quizQuestions.map((q,i) => `
+    <div class="card" id="qr-${i}">
+      <div style="display:flex;gap:6px;margin-bottom:8px">${tag('Q'+(i+1))}</div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:7px">${q.q}</div>
+      ${state.quizAnswers[i]
+        ? `<div style="font-size:12px;color:var(--text-muted);padding:7px 10px;background:linear-gradient(to right,#f5f5f5,#f0f0f0);border-radius:6px;margin-bottom:7px;line-height:1.6;border:1px solid var(--border)">${state.quizAnswers[i]}</div>`
+        : `<div style="font-size:12px;color:#bbb;margin-bottom:7px">No answer provided</div>`}
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted)"><span class="spinner" style="width:12px;height:12px"></span> Evaluating…</div>
+    </div>`).join('');
+
+  let totalM = 0, earnM = 0;
+  const evals = [];
+
+  for (let i = 0; i < state.quizQuestions.length; i++) {
+    const q = state.quizQuestions[i];
+    const a = state.quizAnswers[i] || '';
+    let ev;
+    try {
+      const p = `Evaluate CBSE answer. Return ONLY JSON.\nQuestion: ${q.q}\nMarks: ${q.marks}\nKey Points: ${q.key_points?.join(', ')}\nAnswer: "${a || '(blank)'}"\nReturn: {"marks_awarded":N,"feedback":"1 sentence","missing":["point"],"grade":"A|B|C|D"}`;
+      const txt = await callClaude(p);
+      ev = parseJSON(txt);
+    } catch { ev = { marks_awarded:0, feedback:'Evaluation failed', missing:[], grade:'D' }; }
+    evals.push(ev);
+    totalM += q.marks; earnM += ev.marks_awarded || 0;
+
+    const gv = ev.grade==='A'?'strong':ev.grade==='B'?'pos':ev.grade==='C'?'warn':'neg';
+    const card = document.getElementById('qr-'+i);
+    if (card) {
+      const last = card.lastElementChild;
+      last.innerHTML = `<div style="font-size:12px;color:var(--text-dim);margin-bottom:4px">${ev.feedback}</div>
+        ${ev.missing?.length ? '<div style="display:flex;gap:5px;flex-wrap:wrap">'+ev.missing.map(m=>tag('Missing: '+m,'warn')).join('')+'</div>' : ''}`;
+      const tagsEl = card.querySelector('[id^="qr-tags-"]');
+      const firstTagRow = card.querySelector('div[style*="gap:6px"]');
+      if (firstTagRow) firstTagRow.innerHTML = tag('Q'+(i+1)) + tag('Grade '+ev.grade, gv) + tag(ev.marks_awarded+'/'+q.marks);
+    }
+  }
+
+  const pct = totalM ? Math.round((earnM/totalM)*100) : 0;
+  document.getElementById('quiz-score-ring').innerHTML = scoreRingSVG(earnM, totalM, 112);
+  document.getElementById('quiz-pct-label').textContent = pct+'%';
+  document.getElementById('quiz-verdict').textContent = pct>=80?'Excellent — exam ready 🎉':pct>=60?'Good attempt. Keep practising.':'Needs more revision.';
+  document.getElementById('quiz-result-tags').innerHTML = tag(pct>=80?'Exam Ready':pct>=60?'Developing':'Needs Work', pct>=80?'strong':pct>=60?'pos':'neg');
+}
+
+function resetQuiz() {
+  state.quizQuestions = []; state.quizAnswers = {}; state.quizCurrent = 0;
+  document.getElementById('quiz-config').style.display = 'block';
+  document.getElementById('quiz-active').style.display = 'none';
+  document.getElementById('quiz-results').style.display = 'none';
+  document.getElementById('quiz-start-btn').disabled = false;
+  document.getElementById('quiz-start-btn').textContent = '▶ Start Quiz';
+}
+
+// ── PERFORMANCE ────────────────────────────────────────────────────────────────
+function renderPerformance() {
+  // Bar chart
+  const weekData = [{day:'Mon',score:68},{day:'Tue',score:72},{day:'Wed',score:65},{day:'Thu',score:78},{day:'Fri',score:74},{day:'Sat',score:81},{day:'Sun',score:77}];
+  const maxH = 130;
+  document.getElementById('bar-chart').innerHTML = weekData.map(d => {
+    const h = (d.score/100)*maxH;
+    const cls = d.score>=75?'high':'low';
+    return `<div class="bar-col">
+      <span class="bar-col-val">${d.score}</span>
+      <div class="bar-col-bar ${cls}" style="height:${h}px"></div>
+      <span class="bar-col-day">${d.day}</span>
+    </div>`;
+  }).join('');
+
+  // Mistake bars
+  const mistakes = [{type:'Incomplete answers',pct:35},{type:'Wrong formula',pct:23},{type:'Missing keywords',pct:20},{type:'Conceptual error',pct:15},{type:'Calculation error',pct:7}];
+  document.getElementById('mistake-bars').innerHTML = mistakes.map(m => `
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:12px;color:var(--text-dim)">${m.type}</span>
+        <span style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace">${m.pct}%</span>
+      </div>
+      <div style="height:5px;background:linear-gradient(to right,#ececee,#e5e5e5);border-radius:3px">
+        <div style="height:100%;width:${m.pct}%;background:linear-gradient(to right,#888,#555);border-radius:3px"></div>
+      </div>
+    </div>`).join('');
+
+  // Subject table
+  const subjects = [{s:'Science',a:68,t:24,trend:'+5%'},{s:'Mathematics',a:74,t:18,trend:'+8%'},{s:'English',a:85,t:12,trend:'+2%'},{s:'Social Science',a:72,t:20,trend:'+3%'},{s:'Hindi',a:61,t:8,trend:'-2%'}];
+  document.getElementById('perf-table-body').innerHTML = subjects.map(s => {
+    const barFill = s.a>=75?'linear-gradient(to right,#444,#111)':'linear-gradient(to right,#aaa,#888)';
+    const trendColor = s.trend.startsWith('+')?'var(--accent)':'#bbb';
+    const statusTag = tag(s.a>=75?'Strong':s.a>=60?'Developing':'Weak', s.a>=75?'strong':s.a>=60?'pos':'neg');
+    return `<tr>
+      <td>${s.s}</td>
+      <td><div style="display:flex;align-items:center;gap:9px">
+        <div class="tbar-track"><div class="tbar-fill" style="width:${s.a}%;background:${barFill}"></div></div>
+        <span style="font-size:12px;font-family:'DM Mono',monospace">${s.a}%</span>
+      </div></td>
+      <td style="color:var(--text-muted)">${s.t}</td>
+      <td><span style="font-size:12px;color:${trendColor};font-weight:600">${s.trend}</span></td>
+      <td>${statusTag}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── AI TUTOR ───────────────────────────────────────────────────────────────────
+const QUICK_PROMPTS = ['Explain law of reflection simply','Mnemonic for trig ratios','Summarise French Revolution','Solve x²−5x+6=0 step by step','Key points for photosynthesis'];
+
+function initTutor() {
+  document.getElementById('quick-prompts').innerHTML = QUICK_PROMPTS.map(p =>
+    `<button class="quick-prompt" onclick="sendChat('${p.replace(/'/g,"\\'")}')">  ${p}</button>`
+  ).join('');
+  appendChatMsg('assistant', "Hi! I'm your AI study tutor. Ask me anything — concepts, numericals, mnemonics, or chapter summaries.");
+}
+
+function appendChatMsg(role, text) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  if (role === 'assistant') {
+    div.innerHTML = `<div class="chat-avatar">◉</div><div class="chat-bubble assistant">${text.replace(/\n/g,'<br>')}</div>`;
+  } else {
+    div.innerHTML = `<div class="chat-bubble user">${text.replace(/\n/g,'<br>')}</div>`;
+  }
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function appendTyping() {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg assistant';
+  div.id = 'typing-indicator';
+  div.innerHTML = `<div class="chat-avatar">◉</div><div class="chat-bubble assistant"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendChat(text) {
+  const inputEl = document.getElementById('chat-input');
+  const msg = (text || inputEl.value).trim();
+  if (!msg) return;
+  inputEl.value = '';
+
+  appendChatMsg('user', msg);
+  state.chatHistory.push({ role: 'user', content: msg });
+
+  const sendBtn = document.getElementById('chat-send-btn');
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = '<span class="spinner" style="width:14px;height:14px"></span>';
+  appendTyping();
+
+  const system = `You are a precise tutor for Class ${state.profile.class||'9-10'} ${document.getElementById('tutor-subject').value} (${state.profile.board||'CBSE'} board). Explain simply and step-by-step. Use bullet points for summaries.`;
+
+  try {
+    const reply = await callClaudeChat(state.chatHistory, system);
+    state.chatHistory.push({ role: 'assistant', content: reply });
+    const typing = document.getElementById('typing-indicator');
+    if (typing) typing.remove();
+    appendChatMsg('assistant', reply);
+  } catch {
+    const typing = document.getElementById('typing-indicator');
+    if (typing) typing.remove();
+    appendChatMsg('assistant', 'Connection error. Please try again.');
+  }
+
+  sendBtn.disabled = false;
+  sendBtn.textContent = '→';
+}
+
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+});
+
+// ── INIT ───────────────────────────────────────────────────────────────────────
+function init() {
+  updateSidebarProfile();
+  updateDashboard();
+  updateProfilePage();
+  renderPerformance();
+  initTutor();
+  // Pre-fill generate/quiz difficulty from profile
+  if (state.profile.difficulty) {
+    document.getElementById('gen-difficulty').value = state.profile.difficulty;
+    document.getElementById('quiz-difficulty').value = state.profile.difficulty;
+  }
+  if (state.profile.qtype) {
+    document.getElementById('gen-type').value = state.profile.qtype;
+  }
+  if (state.profile.class) document.getElementById('gen-class').value = state.profile.class;
+  if (state.profile.board) document.getElementById('gen-board').value = state.profile.board;
+  // If no name set, open profile
+  if (!state.profile.name) navigate('profile');
+}
+
+init();
+</script>
+</body>
+</html>
